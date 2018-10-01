@@ -41,6 +41,7 @@ class EncoderRNN(nn.Module):
 class DecoderRNN(nn.Module):
     def __init__(self, input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, time_step=TIME_STEP):
         super(DecoderRNN, self).__init__()
+        self.input_size = input_size
         self.hidden_size = hidden_size
         self.time_step = time_step
 
@@ -58,7 +59,7 @@ class DecoderRNN(nn.Module):
         h_output, h_n = self.gru(input, h_state)
         h_output_reshaped = h_output.view(-1, self.hidden_size)
         output = self.out(h_output_reshaped)
-        output = output.view(-1, self.time_step, self.hidden_size)
+        output = output.view(-1, self.time_step, self.input_size)
 
         return output, h_n
 
@@ -88,11 +89,11 @@ def train(input_length, input_tensor, train_x, train_y):
         (x, y) = sample_batch(train_x, train_y)
         # x (batch, en_time_step, input_size)
         # y (batch, de_time_step, output_size)
-        de_x = np.concatenate(x[-1:],y[:-1])
+        de_x = np.concatenate(x[:, -1:, :], y[:, :-1, :])
         h_0 = torch.zeros(1, x.shape[0], HIDDEN_SIZE, device=device)
 
         x = torch.from_numpy(x)
-        de_x = torch.form_numpy(de_x)
+        de_x = torch.from_numpy(de_x)
         y = torch.from_numpy(y)
 
         autoencoder = Seq2SeqModal()
